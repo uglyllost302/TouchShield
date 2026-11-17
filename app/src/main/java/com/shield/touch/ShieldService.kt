@@ -38,7 +38,7 @@ class ShieldService : Service() {
         val notif = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Notification.Builder(this, chId)
                 .setContentTitle("TouchShield активен")
-                .setContentText("Блокировка сдвига камеры включена")
+                .setContentText("Клики проходят, сдвиг камеры заблокирован")
                 .setSmallIcon(android.R.drawable.ic_lock_lock)
                 .build()
         } else {
@@ -77,7 +77,7 @@ class ShieldService : Service() {
         }
 
         btnAdd.setOnClickListener {
-            addShieldPad(250, 250, 220)
+            addShieldPad(250, 500, 240)
             savePads()
         }
 
@@ -179,9 +179,20 @@ class ShieldService : Service() {
                         }
                         MotionEvent.ACTION_UP -> savePads()
                     }
+                    return true
                 }
-                // Всегда возвращаем true — поглощаем весь сдвиг пальца, чтобы экран под кнопкой не крутился!
-                return true
+
+                // В боевом режиме (🔒 Lock):
+                return when (e.action) {
+                    MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP -> {
+                        // Пропускаем клики дальше в игру, чтобы кнопки нажимались!
+                        false
+                    }
+                    else -> {
+                        // Поглощаем только сдвиги пальца (MOVE), чтобы камера не крутилась
+                        true
+                    }
+                }
             }
         })
 
